@@ -5,10 +5,11 @@ import java.net.*;
 
 class UDPClient {
   public static void main(String args[]) throws Exception {
+	while(true) {
     System.out.println("Running Client");
     BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
     DatagramSocket clientSocket = new DatagramSocket();
-    InetAddress IPAddress = InetAddress.getByName("localhost");
+    InetAddress IPAddress = InetAddress.getByName("172.22.83.66");
     byte[] sendData = new byte[1024];
     byte[] receiveData = new byte[1024];
     String sentence = inFromUser.readLine();
@@ -20,6 +21,7 @@ class UDPClient {
     String modifiedSentence = new String(receivePacket.getData());
     System.out.println("FROM SERVER:" + modifiedSentence);
     clientSocket.close();
+	}
   }
 }
 

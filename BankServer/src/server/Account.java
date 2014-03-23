@@ -17,6 +17,22 @@ public class Account {
 		ArrayList<String> transaction = new ArrayList<String>();
 		transaction.add(now() + "Account was opened");
 	}
+	
+	Account(int AccountNumber, String name, String password, String currency, Double balance) {
+		ArrayList<String> transaction = new ArrayList<String>();
+		transaction.add(now() + "Account was opened");
+		this.accountNumber = accountNumber;
+		transaction.add(now() + " Account number was set to " + Integer.toString(accountNumber));
+		this.name = name;
+		transaction.add(now() + " Name of account holder was set to " + name);
+		this.password = password;
+		transaction.add(now() + "Password was set to " + password);
+		this.currency = currency;
+		transaction.add(now() + "Currency type of the account was set to " + currency);
+		this.balance = balance;
+		transaction.add(now() + "Balance was set to " + Double.toString(balance));
+		
+	}
 
 	public int getAccountNumber() {
 		return accountNumber;

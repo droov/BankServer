@@ -9,13 +9,18 @@ public class Parser {
   private int lastClientId;
   private LinkedHashMap<Integer,Account> listOfAccounts;
   private LinkedHashMap<Integer,Client> listOfClients;
+  private LinkedHashMap<Integer,String> receivedMessages;
+  private LinkedHashMap<Integer,String> sentMessages;
 
   public Parser() {
     messageReceived = "";
-    lastAccNum = (int) (Math.random() * 1000000);
+    //lastAccNum = (int) (Math.random() * 1000000);
+    lastAccNum = 100;
     lastClientId = 11;
     listOfAccounts = new LinkedHashMap<Integer,Account>();    
     listOfClients = new LinkedHashMap<Integer,Client>();
+    receivedMessages = new LinkedHashMap<Integer,String>();
+    sentMessages = new LinkedHashMap<Integer,String>();
   }
 
   public String getMessageReceived() {
@@ -45,12 +50,20 @@ public class Parser {
   public String parseMessage(String message) {
     setMessageReceived(message);
     String reply = "";
+    int requestId = 0;
     if (messageReceived.equalsIgnoreCase("000000")) {
       // Create a client and assign it a client id and return that to the server class
       return Integer.toString(createNewClient()); 
     } else {
+      if(listOfClients.isEmpty()){
+        return "This client is not authorized to transact with the server";
+      }
       StringTokenizer stz = new StringTokenizer(message, "|");
-      int requestId = Integer.parseInt(stz.nextToken());
+      requestId = Integer.parseInt(stz.nextToken());
+      if(receivedMessages.containsKey(requestId)) {
+        return sentMessages.get(requestId);
+      }
+      receivedMessages.put(requestId, message);
       String operation = stz.nextToken();
       String name, password, currency;
       int accountNum, time;
@@ -67,22 +80,29 @@ public class Parser {
         name = stz.nextToken();
         password = stz.nextToken();
         accountNum = Integer.parseInt(stz.nextToken());
+        reply = requestId + "|" + closeAccount(accountNum, password);
       } else if (operation.equalsIgnoreCase("DepositAcc")) {
         name = stz.nextToken();
         password = stz.nextToken();
         accountNum = Integer.parseInt(stz.nextToken());
         currency = stz.nextToken();
         amount = Double.parseDouble(stz.nextToken());
+        reply = requestId + "|" + depositToAccount(name, accountNum, password, currency, amount);
       } else if (operation.equalsIgnoreCase("WithdrawAcc")) {
         name = stz.nextToken();
         password = stz.nextToken();
         accountNum = Integer.parseInt(stz.nextToken());
         currency = stz.nextToken();
         amount = Double.parseDouble(stz.nextToken());
+        reply = requestId + "|" + withdrawFromAccount(name, accountNum, password, currency, amount);
       } else if (operation.equalsIgnoreCase("Monitor")) {
         time = Integer.parseInt(stz.nextToken());
       }
     }
+    System.out.println(listOfAccounts.toString());
+    System.out.println(listOfClients.toString());
+    
+    sentMessages.put(requestId, reply);
     return reply;
   }
 
@@ -100,5 +120,59 @@ public class Parser {
     Client newClient = new Client(clientId, false, UDPServer.ipAddress);
     listOfClients.put(clientId, newClient);
     return clientId;
+  }
+  
+  public String closeAccount(int accountNum, String password){
+    if(listOfAccounts.containsKey(accountNum)){
+      if(listOfAccounts.get(accountNum).getPassword().equals(password)){
+        listOfAccounts.remove(accountNum);
+        return "Account with account number " + accountNum + " has been closed";
+      }
+      else
+        return "The details entered are incorrect.";
+    }    
+    return "Account with account number " + accountNum + " not found";
+  }
+  
+  public String withdrawFromAccount(String name, int accountNum, String password, String currency, double amount){
+    double convertedAmount = amount;
+    if(listOfAccounts.containsKey(accountNum)){
+      if(listOfAccounts.get(accountNum).getPassword().equals(password) && listOfAccounts.get(accountNum).getName().equals(name)){
+        if(!listOfAccounts.get(accountNum).getCurrency().equalsIgnoreCase(currency))
+          convertedAmount = changeCurrency(currency, listOfAccounts.get(accountNum).getCurrency(), amount);
+        if(listOfAccounts.get(accountNum).getBalance()>=convertedAmount) {
+        //double newAmount = listOfAccounts.get(accountNum).getBalance()-convertedAmount;  
+        //listOfAccounts.get(accountNum).setBalance(newAmount);
+        listOfAccounts.get(accountNum).setBalance(listOfAccounts.get(accountNum).getBalance()-convertedAmount);
+        return "The withdrawal of amount " + amount + currency + " from account " + accountNum + " has been successful. Your new balance is " + listOfAccounts.get(accountNum).getBalance() + listOfAccounts.get(accountNum).getCurrency();
+        }
+        else {
+          return "Insufficient funds available to complete transaction";
+        }
+      }
+      else
+        return "The details entered are incorrect.";
+    }    
+    return "Account with account number " + accountNum + " not found";    
+  }
+  
+  public String depositToAccount(String name, int accountNum, String password, String currency, double amount){
+    double convertedAmount = amount;
+    if(listOfAccounts.containsKey(accountNum)){
+      if(listOfAccounts.get(accountNum).getPassword().equals(password) && listOfAccounts.get(accountNum).getName().equals(name)){
+        if(!listOfAccounts.get(accountNum).getCurrency().equalsIgnoreCase(currency))
+          convertedAmount = changeCurrency(currency, listOfAccounts.get(accountNum).getCurrency(), amount);
+        listOfAccounts.get(accountNum).setBalance(listOfAccounts.get(accountNum).getBalance()+convertedAmount);
+        return "The deposit of amount " + amount + currency + " to account " + accountNum + " has been successful. Your new balance is " + listOfAccounts.get(accountNum).getBalance() + listOfAccounts.get(accountNum).getCurrency();
+      }
+      else
+        return "The details entered are incorrect.";
+    }    
+    return "Account with account number " + accountNum + " not found";    
+  }
+
+  public double changeCurrency(String currency, String currency2, double amount) {
+    // TO ADD LOGIC TO CONVERT CURRENCY
+    return amount;
   }
 }

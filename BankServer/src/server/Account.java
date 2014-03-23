@@ -10,16 +10,16 @@ public class Account {
 	private String password;
 	private String currency;
 	private double balance;
-	private ArrayList transaction;
+	private ArrayList<String> transaction;
 	public static final String DATE_FORMAT_NOW = "yyyy-MM-dd HH:mm:ss";
 	
 	Account() {
-		ArrayList<String> transaction = new ArrayList<String>();
+		transaction = new ArrayList<String>();
 		transaction.add(now() + "Account was opened");
 	}
 	
-	Account(int AccountNumber, String name, String password, String currency, Double balance) {
-		ArrayList<String> transaction = new ArrayList<String>();
+	Account(int accountNumber, String name, String password, String currency, Double balance) {
+		transaction = new ArrayList<String>();
 		transaction.add(now() + "Account was opened");
 		this.accountNumber = accountNumber;
 		transaction.add(now() + " Account number was set to " + Integer.toString(accountNumber));

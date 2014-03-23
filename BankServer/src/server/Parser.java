@@ -6,12 +6,16 @@ import java.util.StringTokenizer;
 public class Parser {
   private String messageReceived;
   private int lastAccNum;
+  private int lastClientId;
   private LinkedHashMap<Integer,Account> listOfAccounts;
+  private LinkedHashMap<Integer,Client> listOfClients;
 
   public Parser() {
     messageReceived = "";
     lastAccNum = (int) (Math.random() * 1000000);
-    listOfAccounts = new LinkedHashMap<Integer,Account>();
+    lastClientId = 11;
+    listOfAccounts = new LinkedHashMap<Integer,Account>();    
+    listOfClients = new LinkedHashMap<Integer,Client>();
   }
 
   public String getMessageReceived() {
@@ -30,11 +34,20 @@ public class Parser {
     lastAccNum = acn;
   }
 
+  public int getLastClientId() {
+    return lastClientId;
+  }
+
+  public void setLastClientId(int cid) {
+    lastClientId = cid;
+  }
+  
   public String parseMessage(String message) {
     setMessageReceived(message);
     String reply = "";
     if (messageReceived.equalsIgnoreCase("000000")) {
       // Create a client and assign it a client id and return that to the server class
+      return Integer.toString(createNewClient()); 
     } else {
       StringTokenizer stz = new StringTokenizer(message, "|");
       int requestId = Integer.parseInt(stz.nextToken());
@@ -76,8 +89,16 @@ public class Parser {
   public int openAccount(String name, String password, String currency, double balance) {
     int accountNum = getLastAccountNum();
     setLastAccountNum(getLastAccountNum() + 1);
-    Account a = new Account(accountNum, name, password, currency, balance);
-
+    Account newAccount = new Account(accountNum, name, password, currency, balance);
+    listOfAccounts.put(accountNum, newAccount);
     return accountNum;
+  }
+  
+  public int createNewClient(){
+    int clientId = getLastClientId();
+    setLastClientId(getLastClientId() + 1);
+    Client newClient = new Client(clientId, false, UDPServer.ipAddress);
+    listOfClients.put(clientId, newClient);
+    return clientId;
   }
 }

@@ -5,6 +5,9 @@ import java.util.*;
 import java.net.*;
 
 class UDPServer {
+  
+  protected static InetAddress ipAddress;
+  
   public static void main(String args[]) throws Exception {
     System.out.println("Running Server");
     DatagramSocket serverSocket = new DatagramSocket(9876);
@@ -20,6 +23,7 @@ class UDPServer {
       System.out.println("RECEIVED: " + sentence);
       
       InetAddress IPAddress = receivePacket.getAddress();
+      ipAddress = IPAddress;
       int port = receivePacket.getPort();
       String serverResponse = parser.parseMessage(sentence);      
       sendData = serverResponse.getBytes();

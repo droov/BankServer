@@ -30,8 +30,7 @@ public class Account {
 		this.currency = currency;
 		transaction.add(now() + "Currency type of the account was set to " + currency);
 		this.balance = balance;
-		transaction.add(now() + "Balance was set to " + Double.toString(balance));
-		
+		transaction.add(now() + "Balance was set to " + Double.toString(balance));		
 	}
 
 	public int getAccountNumber() {

@@ -90,6 +90,7 @@ public class Account {
 		for( int index = 0; index < transaction.size(); index++ ) {
 			message = message + transaction.get(index) + "\n";
 		}
+		message = message + "All balances stated are in " + currency;
 		return message;
 	}
 

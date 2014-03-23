@@ -21,17 +21,17 @@ public class Account {
 	Account(int accountNumber, String name, String password, String currency, Double balance) {
 		String time = now();
 		transaction = new ArrayList<String>();
-		transaction.add(time + "Account was opened");
+		transaction.add(time + " Account was opened");
 		this.accountNumber = accountNumber;
 		transaction.add(time + " Account number was set to " + Integer.toString(accountNumber));
 		this.name = name;
 		transaction.add(time + " Name of account holder was set to " + name);
 		this.password = password;
-		transaction.add(time + "Password was set to " + password);
+		transaction.add(time + " Password was set to " + password);
 		this.currency = currency;
-		transaction.add(time + "Currency type of the account was set to " + currency);
+		transaction.add(time + " Currency type of the account was set to " + currency);
 		this.balance = balance;
-		transaction.add(time + "Balance was set to " + Double.toString(balance));		
+		transaction.add(time + " Balance was set to " + Double.toString(balance));		
 	}
 
 	public int getAccountNumber() {

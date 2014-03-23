@@ -55,8 +55,9 @@ public class Parser {
       // Create a client and assign it a client id and return that to the server class
       return Integer.toString(createNewClient()); 
     } else {
+      // check if a particular client is allowed using ip address
       if(listOfClients.isEmpty()){
-        return "This client is not authorized to transact with the server";
+        return "This client is not authorized to transact with the server";        
       }
       StringTokenizer stz = new StringTokenizer(message, "|");
       requestId = Integer.parseInt(stz.nextToken());
@@ -97,6 +98,12 @@ public class Parser {
         reply = requestId + "|" + withdrawFromAccount(name, accountNum, password, currency, amount);
       } else if (operation.equalsIgnoreCase("Monitor")) {
         time = Integer.parseInt(stz.nextToken());
+      }
+      else if (operation.equalsIgnoreCase("TransactionAcc")) {
+        name = stz.nextToken();
+        password = stz.nextToken();
+        accountNum = Integer.parseInt(stz.nextToken());
+        reply = requestId + "|" + "\n" + getTransactionHistory(name, accountNum, password);
       }
     }
     System.out.println(listOfAccounts.toString());
@@ -164,6 +171,17 @@ public class Parser {
           convertedAmount = changeCurrency(currency, listOfAccounts.get(accountNum).getCurrency(), amount);
         listOfAccounts.get(accountNum).setBalance(listOfAccounts.get(accountNum).getBalance()+convertedAmount);
         return "The deposit of amount " + amount + currency + " to account " + accountNum + " has been successful. Your new balance is " + listOfAccounts.get(accountNum).getBalance() + listOfAccounts.get(accountNum).getCurrency();
+      }
+      else
+        return "The details entered are incorrect.";
+    }    
+    return "Account with account number " + accountNum + " not found";    
+  }
+  
+  public String getTransactionHistory(String name, int accountNum, String password){    
+    if(listOfAccounts.containsKey(accountNum)){
+      if(listOfAccounts.get(accountNum).getPassword().equals(password) && listOfAccounts.get(accountNum).getName().equals(name)){        
+        return listOfAccounts.get(accountNum).getTransactions();
       }
       else
         return "The details entered are incorrect.";

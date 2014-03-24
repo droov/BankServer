@@ -1,5 +1,7 @@
 package server;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.StringTokenizer;
@@ -65,17 +67,15 @@ public class Parser {
           break;
         }
       }
-    }
-    else {
+    } else {
       for (Map.Entry entry : listOfClients.entrySet()) {
         if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)) {
           flag = true;
           break;
         }
       }
-      if (flag == false)
-        return "This client is not authorized to transact with the server";
-      
+      if (flag == false) return "This client is not authorized to transact with the server";
+
       for (Map.Entry entry : listOfClients.entrySet()) {
         if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)) {
           ((Client) entry.getValue()).setPort(UDPServer.port);
@@ -83,7 +83,7 @@ public class Parser {
           break;
         }
       }
-      
+
       StringTokenizer stz = new StringTokenizer(message, "|");
       requestId = Integer.parseInt(stz.nextToken());
       if (receivedMessages.containsKey(requestId)) {
@@ -234,16 +234,25 @@ public class Parser {
     } catch (Exception e) {
       e.printStackTrace();
     }
-    return amount * exchangeRate;
+    amount = amount * exchangeRate;
+    amount = round(amount, 2, BigDecimal.ROUND_FLOOR);
+    return amount;
   }
 
   public String setClientToMonitor(int time) {
     for (Map.Entry entry : listOfClients.entrySet()) {
       if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)) {
-        ((Client) entry.getValue()).setIsMonitor(true);
-      }
-
+        ((Client) entry.getValue()).setIsMonitor(true);                
+        UDPServer.timer.schedule(new MonitorTimer(), time*1000);       
+     }
     }
     return "Client has been set as a monitor";
+  }
+  
+  public static double round(double unrounded, int precision, int roundingMode)
+  {
+      BigDecimal bd = new BigDecimal(unrounded);
+      BigDecimal rounded = bd.setScale(precision, roundingMode);
+      return rounded.doubleValue();
   }
 }

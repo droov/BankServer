@@ -1,5 +1,6 @@
 package server;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.StringTokenizer;
@@ -13,6 +14,7 @@ public class Parser {
   private LinkedHashMap<Integer, String> receivedMessages;
   private LinkedHashMap<Integer, String> sentMessages;
   private YahooCurrencyConverter currConverter;
+  private boolean isAtMostOnce = true;
 
   public Parser() {
     messageReceived = "";
@@ -65,17 +67,17 @@ public class Parser {
           break;
         }
       }
-    }
-    else {
+    } else {
       for (Map.Entry entry : listOfClients.entrySet()) {
-        if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)) {
+        if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)
+            && ((Client) entry.getValue()).getClientID() == Integer.parseInt(message
+                .substring(0, 2))) {
           flag = true;
           break;
         }
       }
-      if (flag == false)
-        return "This client is not authorized to transact with the server";
-      
+      if (flag == false) return "This client is not authorized to transact with the server";
+
       for (Map.Entry entry : listOfClients.entrySet()) {
         if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)) {
           ((Client) entry.getValue()).setPort(UDPServer.port);
@@ -83,10 +85,10 @@ public class Parser {
           break;
         }
       }
-      
+
       StringTokenizer stz = new StringTokenizer(message, "|");
       requestId = Integer.parseInt(stz.nextToken());
-      if (receivedMessages.containsKey(requestId)) {
+      if (receivedMessages.containsKey(requestId) && isAtMostOnce==true) {
         return sentMessages.get(requestId);
       }
       receivedMessages.put(requestId, message);
@@ -130,7 +132,23 @@ public class Parser {
         password = stz.nextToken();
         accountNum = Integer.parseInt(stz.nextToken());
         reply = requestId + "|" + "\n" + getTransactionHistory(name, accountNum, password);
+      } else if (operation.equalsIgnoreCase("TransferAcc")) {
+        name = stz.nextToken();
+        password = stz.nextToken();
+        accountNum = Integer.parseInt(stz.nextToken());
+        int receiverAccountNum = Integer.parseInt(stz.nextToken());
+        amount = Double.parseDouble(stz.nextToken());
+        reply =
+            requestId + "|"
+                + transferToAccount(name, accountNum, password, receiverAccountNum, amount);
       }
+      else if (operation.equalsIgnoreCase("CheckAcc")) {
+        name = stz.nextToken();
+        password = stz.nextToken();
+        accountNum = Integer.parseInt(stz.nextToken());
+        reply = requestId + "|" + checkAccountBalance(name,password,accountNum);
+      }
+      
     }
     for (Map.Entry entry : listOfAccounts.entrySet()) {
       System.out.println(entry.getValue().toString());
@@ -216,11 +234,48 @@ public class Parser {
     return "Account with account number " + accountNum + " not found";
   }
 
+  public String checkAccountBalance(String name, String password, int accountNum) {
+    if (listOfAccounts.containsKey(accountNum)) {
+      if (listOfAccounts.get(accountNum).getPassword().equals(password)
+          && listOfAccounts.get(accountNum).getName().equals(name)) {
+        return "The account balance of account number " + accountNum + " is " + listOfAccounts.get(accountNum).getBalance() + listOfAccounts.get(accountNum).getCurrency();
+      } else
+        return "The details entered are incorrect.";
+    }
+    return "Account with account number " + accountNum + " not found";
+  }
+  
   public String getTransactionHistory(String name, int accountNum, String password) {
     if (listOfAccounts.containsKey(accountNum)) {
       if (listOfAccounts.get(accountNum).getPassword().equals(password)
           && listOfAccounts.get(accountNum).getName().equals(name)) {
         return listOfAccounts.get(accountNum).getTransactions();
+      } else
+        return "The details entered are incorrect.";
+    }
+    return "Account with account number " + accountNum + " not found";
+  }
+
+  public String transferToAccount(String name, int accountNum, String password, int receiverAccountNum, double amount) {
+    double convertedAmount = amount;
+    if (listOfAccounts.containsKey(accountNum) && listOfAccounts.containsKey(receiverAccountNum)) {
+      if (listOfAccounts.get(accountNum).getPassword().equals(password)
+          && listOfAccounts.get(accountNum).getName().equals(name)) {
+        if (!listOfAccounts.get(accountNum).getCurrency().equalsIgnoreCase(listOfAccounts.get(receiverAccountNum).getCurrency()))
+          convertedAmount =
+              changeCurrency(listOfAccounts.get(accountNum).getCurrency(), listOfAccounts.get(receiverAccountNum).getCurrency(), amount);
+        if (listOfAccounts.get(accountNum).getBalance() >= amount) {
+          listOfAccounts.get(accountNum).setBalance(
+              listOfAccounts.get(accountNum).getBalance() - amount);
+          listOfAccounts.get(receiverAccountNum).setBalance(
+            listOfAccounts.get(receiverAccountNum).getBalance() + convertedAmount);
+          return "The transfer of amount " + amount + listOfAccounts.get(accountNum).getCurrency() + " from account " + accountNum
+              + " to " + listOfAccounts.get(receiverAccountNum).getAccountNumber() + " has been successful. Your new balance is "
+              + listOfAccounts.get(accountNum).getBalance()
+              + listOfAccounts.get(accountNum).getCurrency();
+        } else {
+          return "Insufficient funds available to complete transaction";
+        }
       } else
         return "The details entered are incorrect.";
     }
@@ -234,16 +289,24 @@ public class Parser {
     } catch (Exception e) {
       e.printStackTrace();
     }
-    return amount * exchangeRate;
+    amount = amount * exchangeRate;
+    amount = round(amount, 2, BigDecimal.ROUND_FLOOR);
+    return amount;
   }
 
   public String setClientToMonitor(int time) {
     for (Map.Entry entry : listOfClients.entrySet()) {
       if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)) {
         ((Client) entry.getValue()).setIsMonitor(true);
+        UDPServer.timer.schedule(new MonitorTimer(), time * 1000);
       }
-
     }
     return "Client has been set as a monitor";
+  }
+
+  public static double round(double unrounded, int precision, int roundingMode) {
+    BigDecimal bd = new BigDecimal(unrounded);
+    BigDecimal rounded = bd.setScale(precision, roundingMode);
+    return rounded.doubleValue();
   }
 }

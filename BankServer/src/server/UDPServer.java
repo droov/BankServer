@@ -7,6 +7,7 @@ import java.net.*;
 class UDPServer {
   
   protected static InetAddress ipAddress;
+  protected static int port;
   
   public static void main(String args[]) throws Exception {
     System.out.println("Running Server");
@@ -24,7 +25,8 @@ class UDPServer {
       InetAddress IPAddress = receivePacket.getAddress();
       ipAddress = IPAddress;
       System.out.println("RECEIVED FROM IP ADDRESS " + IPAddress.toString() +  " :  " + sentence);
-      int port = receivePacket.getPort();
+      port = receivePacket.getPort();
+      System.out.println("PORT: " + port);
       String serverResponse = parser.parseMessage(sentence);
       System.out.println("SENT TO IP ADDRESS " + IPAddress.toString() + " : " + serverResponse);
       sendData = serverResponse.getBytes();
@@ -34,9 +36,15 @@ class UDPServer {
       // Sending data to monitors if they exist
       for (Map.Entry entry : parser.listOfClients.entrySet()) {
         if(((Client)entry.getValue()).getIsMonitor()){
-          sendPacket = new DatagramPacket(sendData, sendData.length, ((Client)entry.getValue()).getIPAddress(), port);
+          try{
+            Thread.sleep(5000);
+         }catch(InterruptedException ex){
+            ex.printStackTrace();
+         }
+          //DatagramPacket monitorSendPacket = new DatagramPacket(sendData, sendData.length, ((Client)entry.getValue()).getIPAddress(), ((Client)entry.getValue()).getPort());
+          DatagramPacket monitorSendPacket = new DatagramPacket(sendData, sendData.length, ((Client)entry.getValue()).getIPAddress(), 9877);
           System.out.println("SENT TO MONITOR AT IP ADDRESS " + ((Client)entry.getValue()).getIPAddress().toString() + " : " + serverResponse);
-          serverSocket.send(sendPacket);
+          serverSocket.send(monitorSendPacket);
         }         
       }
     }

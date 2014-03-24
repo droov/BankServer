@@ -66,17 +66,24 @@ public class Parser {
         }
       }
     }
-
-    for (Map.Entry entry : listOfClients.entrySet()) {
-      if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)) {
-        flag = true;
-        break;
-      }
-    }
-    if (flag == false)
-      return "This client is not authorized to transact with the server";
-
     else {
+      for (Map.Entry entry : listOfClients.entrySet()) {
+        if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)) {
+          flag = true;
+          break;
+        }
+      }
+      if (flag == false)
+        return "This client is not authorized to transact with the server";
+      
+      for (Map.Entry entry : listOfClients.entrySet()) {
+        if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)) {
+          ((Client) entry.getValue()).setPort(UDPServer.port);
+          System.out.println("Port updated to " + ((Client) entry.getValue()).getPort());
+          break;
+        }
+      }
+      
       StringTokenizer stz = new StringTokenizer(message, "|");
       requestId = Integer.parseInt(stz.nextToken());
       if (receivedMessages.containsKey(requestId)) {
@@ -147,7 +154,7 @@ public class Parser {
   public int createNewClient() {
     int clientId = getLastClientId();
     setLastClientId(getLastClientId() + 1);
-    Client newClient = new Client(clientId, false, UDPServer.ipAddress);
+    Client newClient = new Client(clientId, false, UDPServer.ipAddress, UDPServer.port);
     listOfClients.put(clientId, newClient);
     return clientId;
   }
@@ -237,6 +244,6 @@ public class Parser {
       }
 
     }
-    return "Account with account number " + " not found";
+    return "Client has been set as a monitor";
   }
 }

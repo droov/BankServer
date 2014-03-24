@@ -1,5 +1,6 @@
 package server;
 
+import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.StringTokenizer;
 
@@ -7,20 +8,22 @@ public class Parser {
   private String messageReceived;
   private int lastAccNum;
   private int lastClientId;
-  private LinkedHashMap<Integer,Account> listOfAccounts;
-  private LinkedHashMap<Integer,Client> listOfClients;
-  private LinkedHashMap<Integer,String> receivedMessages;
-  private LinkedHashMap<Integer,String> sentMessages;
+  private LinkedHashMap<Integer, Account> listOfAccounts;
+  protected LinkedHashMap<Integer, Client> listOfClients;
+  private LinkedHashMap<Integer, String> receivedMessages;
+  private LinkedHashMap<Integer, String> sentMessages;
+  private YahooCurrencyConverter currConverter;
 
   public Parser() {
     messageReceived = "";
-    //lastAccNum = (int) (Math.random() * 1000000);
+    // lastAccNum = (int) (Math.random() * 1000000);
     lastAccNum = 100;
     lastClientId = 11;
-    listOfAccounts = new LinkedHashMap<Integer,Account>();    
-    listOfClients = new LinkedHashMap<Integer,Client>();
-    receivedMessages = new LinkedHashMap<Integer,String>();
-    sentMessages = new LinkedHashMap<Integer,String>();
+    listOfAccounts = new LinkedHashMap<Integer, Account>();
+    listOfClients = new LinkedHashMap<Integer, Client>();
+    receivedMessages = new LinkedHashMap<Integer, String>();
+    sentMessages = new LinkedHashMap<Integer, String>();
+    currConverter = new YahooCurrencyConverter();
   }
 
   public String getMessageReceived() {
@@ -46,22 +49,37 @@ public class Parser {
   public void setLastClientId(int cid) {
     lastClientId = cid;
   }
-  
+
   public String parseMessage(String message) {
     setMessageReceived(message);
     String reply = "";
     int requestId = 0;
+    boolean flag = false;
+
     if (messageReceived.equalsIgnoreCase("000000")) {
-      // Create a client and assign it a client id and return that to the server class
-      return Integer.toString(createNewClient()); 
-    } else {
-      // check if a particular client is allowed using ip address
-      if(listOfClients.isEmpty()){
-        return "This client is not authorized to transact with the server";        
+      return Integer.toString(createNewClient());
+    } else if (messageReceived.equalsIgnoreCase("999999")) {
+      for (Map.Entry entry : listOfClients.entrySet()) {
+        if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)) {
+          listOfClients.remove(entry.getKey());
+          break;
+        }
       }
+    }
+
+    for (Map.Entry entry : listOfClients.entrySet()) {
+      if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)) {
+        flag = true;
+        break;
+      }
+    }
+    if (flag == false)
+      return "This client is not authorized to transact with the server";
+
+    else {
       StringTokenizer stz = new StringTokenizer(message, "|");
       requestId = Integer.parseInt(stz.nextToken());
-      if(receivedMessages.containsKey(requestId)) {
+      if (receivedMessages.containsKey(requestId)) {
         return sentMessages.get(requestId);
       }
       receivedMessages.put(requestId, message);
@@ -75,9 +93,10 @@ public class Parser {
         currency = stz.nextToken();
         balance = Double.parseDouble(stz.nextToken());
         accountNum = openAccount(name, password, currency, balance);
-        reply = requestId + "|" + accountNum + "|" + name + "|" + currency + "|" + balance + "|" + "Account for " + name + " created with Account Num " + accountNum;
-      }
-      else if (operation.equalsIgnoreCase("CloseAcc")) {
+        reply =
+            requestId + "|" + accountNum + "|" + name + "|" + currency + "|" + balance + "|"
+                + "Account for " + name + " created with Account Num " + accountNum;
+      } else if (operation.equalsIgnoreCase("CloseAcc")) {
         name = stz.nextToken();
         password = stz.nextToken();
         accountNum = Integer.parseInt(stz.nextToken());
@@ -98,17 +117,21 @@ public class Parser {
         reply = requestId + "|" + withdrawFromAccount(name, accountNum, password, currency, amount);
       } else if (operation.equalsIgnoreCase("Monitor")) {
         time = Integer.parseInt(stz.nextToken());
-      }
-      else if (operation.equalsIgnoreCase("TransactionAcc")) {
+        reply = requestId + "|" + setClientToMonitor(time);
+      } else if (operation.equalsIgnoreCase("TransactionAcc")) {
         name = stz.nextToken();
         password = stz.nextToken();
         accountNum = Integer.parseInt(stz.nextToken());
         reply = requestId + "|" + "\n" + getTransactionHistory(name, accountNum, password);
       }
     }
-    System.out.println(listOfAccounts.toString());
-    System.out.println(listOfClients.toString());
-    
+    for (Map.Entry entry : listOfAccounts.entrySet()) {
+      System.out.println(entry.getValue().toString());
+    }
+
+    for (Map.Entry entry : listOfClients.entrySet()) {
+      System.out.println(entry.getValue().toString());
+    }
     sentMessages.put(requestId, reply);
     return reply;
   }
@@ -120,77 +143,100 @@ public class Parser {
     listOfAccounts.put(accountNum, newAccount);
     return accountNum;
   }
-  
-  public int createNewClient(){
+
+  public int createNewClient() {
     int clientId = getLastClientId();
     setLastClientId(getLastClientId() + 1);
     Client newClient = new Client(clientId, false, UDPServer.ipAddress);
     listOfClients.put(clientId, newClient);
     return clientId;
   }
-  
-  public String closeAccount(int accountNum, String password){
-    if(listOfAccounts.containsKey(accountNum)){
-      if(listOfAccounts.get(accountNum).getPassword().equals(password)){
+
+  public String closeAccount(int accountNum, String password) {
+    if (listOfAccounts.containsKey(accountNum)) {
+      if (listOfAccounts.get(accountNum).getPassword().equals(password)) {
         listOfAccounts.remove(accountNum);
         return "Account with account number " + accountNum + " has been closed";
-      }
-      else
+      } else
         return "The details entered are incorrect.";
-    }    
+    }
     return "Account with account number " + accountNum + " not found";
   }
-  
-  public String withdrawFromAccount(String name, int accountNum, String password, String currency, double amount){
+
+  public String withdrawFromAccount(String name, int accountNum, String password, String currency,
+      double amount) {
     double convertedAmount = amount;
-    if(listOfAccounts.containsKey(accountNum)){
-      if(listOfAccounts.get(accountNum).getPassword().equals(password) && listOfAccounts.get(accountNum).getName().equals(name)){
-        if(!listOfAccounts.get(accountNum).getCurrency().equalsIgnoreCase(currency))
-          convertedAmount = changeCurrency(currency, listOfAccounts.get(accountNum).getCurrency(), amount);
-        if(listOfAccounts.get(accountNum).getBalance()>=convertedAmount) {
-        //double newAmount = listOfAccounts.get(accountNum).getBalance()-convertedAmount;  
-        //listOfAccounts.get(accountNum).setBalance(newAmount);
-        listOfAccounts.get(accountNum).setBalance(listOfAccounts.get(accountNum).getBalance()-convertedAmount);
-        return "The withdrawal of amount " + amount + currency + " from account " + accountNum + " has been successful. Your new balance is " + listOfAccounts.get(accountNum).getBalance() + listOfAccounts.get(accountNum).getCurrency();
-        }
-        else {
+    if (listOfAccounts.containsKey(accountNum)) {
+      if (listOfAccounts.get(accountNum).getPassword().equals(password)
+          && listOfAccounts.get(accountNum).getName().equals(name)) {
+        if (!listOfAccounts.get(accountNum).getCurrency().equalsIgnoreCase(currency))
+          convertedAmount =
+              changeCurrency(currency, listOfAccounts.get(accountNum).getCurrency(), amount);
+        if (listOfAccounts.get(accountNum).getBalance() >= convertedAmount) {
+          listOfAccounts.get(accountNum).setBalance(
+              listOfAccounts.get(accountNum).getBalance() - convertedAmount);
+          return "The withdrawal of amount " + amount + currency + " from account " + accountNum
+              + " has been successful. Your new balance is "
+              + listOfAccounts.get(accountNum).getBalance()
+              + listOfAccounts.get(accountNum).getCurrency();
+        } else {
           return "Insufficient funds available to complete transaction";
         }
-      }
-      else
+      } else
         return "The details entered are incorrect.";
-    }    
-    return "Account with account number " + accountNum + " not found";    
-  }
-  
-  public String depositToAccount(String name, int accountNum, String password, String currency, double amount){
-    double convertedAmount = amount;
-    if(listOfAccounts.containsKey(accountNum)){
-      if(listOfAccounts.get(accountNum).getPassword().equals(password) && listOfAccounts.get(accountNum).getName().equals(name)){
-        if(!listOfAccounts.get(accountNum).getCurrency().equalsIgnoreCase(currency))
-          convertedAmount = changeCurrency(currency, listOfAccounts.get(accountNum).getCurrency(), amount);
-        listOfAccounts.get(accountNum).setBalance(listOfAccounts.get(accountNum).getBalance()+convertedAmount);
-        return "The deposit of amount " + amount + currency + " to account " + accountNum + " has been successful. Your new balance is " + listOfAccounts.get(accountNum).getBalance() + listOfAccounts.get(accountNum).getCurrency();
-      }
-      else
-        return "The details entered are incorrect.";
-    }    
-    return "Account with account number " + accountNum + " not found";    
-  }
-  
-  public String getTransactionHistory(String name, int accountNum, String password){    
-    if(listOfAccounts.containsKey(accountNum)){
-      if(listOfAccounts.get(accountNum).getPassword().equals(password) && listOfAccounts.get(accountNum).getName().equals(name)){        
-        return listOfAccounts.get(accountNum).getTransactions();
-      }
-      else
-        return "The details entered are incorrect.";
-    }    
-    return "Account with account number " + accountNum + " not found";    
+    }
+    return "Account with account number " + accountNum + " not found";
   }
 
-  public double changeCurrency(String currency, String currency2, double amount) {
-    // TO ADD LOGIC TO CONVERT CURRENCY
-    return amount;
+  public String depositToAccount(String name, int accountNum, String password, String currency,
+      double amount) {
+    double convertedAmount = amount;
+    if (listOfAccounts.containsKey(accountNum)) {
+      if (listOfAccounts.get(accountNum).getPassword().equals(password)
+          && listOfAccounts.get(accountNum).getName().equals(name)) {
+        if (!listOfAccounts.get(accountNum).getCurrency().equalsIgnoreCase(currency))
+          convertedAmount =
+              changeCurrency(currency, listOfAccounts.get(accountNum).getCurrency(), amount);
+        listOfAccounts.get(accountNum).setBalance(
+            listOfAccounts.get(accountNum).getBalance() + convertedAmount);
+        return "The deposit of amount " + amount + currency + " to account " + accountNum
+            + " has been successful. Your new balance is "
+            + listOfAccounts.get(accountNum).getBalance()
+            + listOfAccounts.get(accountNum).getCurrency();
+      } else
+        return "The details entered are incorrect.";
+    }
+    return "Account with account number " + accountNum + " not found";
+  }
+
+  public String getTransactionHistory(String name, int accountNum, String password) {
+    if (listOfAccounts.containsKey(accountNum)) {
+      if (listOfAccounts.get(accountNum).getPassword().equals(password)
+          && listOfAccounts.get(accountNum).getName().equals(name)) {
+        return listOfAccounts.get(accountNum).getTransactions();
+      } else
+        return "The details entered are incorrect.";
+    }
+    return "Account with account number " + accountNum + " not found";
+  }
+
+  public double changeCurrency(String sourceCurrency, String destinationCurrency, double amount) {
+    float exchangeRate = 1;
+    try {
+      exchangeRate = currConverter.convert(sourceCurrency, destinationCurrency);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return amount * exchangeRate;
+  }
+
+  public String setClientToMonitor(int time) {
+    for (Map.Entry entry : listOfClients.entrySet()) {
+      if (((Client) entry.getValue()).getIPAddress().equals(UDPServer.ipAddress)) {
+        ((Client) entry.getValue()).setIsMonitor(true);
+      }
+
+    }
+    return "Account with account number " + " not found";
   }
 }

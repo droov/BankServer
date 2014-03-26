@@ -166,7 +166,10 @@ public class Parser {
 					reply = requestId + "|"
 							+ checkAccountBalance(name, password, accountNum);
 				} else {
-					reply = "Server error occured while parsing the message. Please try again later...";
+					if(operation.equalsIgnoreCase("OpenAcc"))
+						reply = " | | | | |Server error occured while parsing the message. Please try again later...";
+					else
+						reply = "Server error occured while parsing the message. Please try again later...";
 				}
 
 			}

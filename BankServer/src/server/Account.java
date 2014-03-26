@@ -71,18 +71,18 @@ public class Account {
 
 	public void setPassword(String password) {
 		this.password = password;
-		transaction.add(now() + "Password was set to " + password);
+		transaction.add(now() + " Password was set to " + password);
 	}
 
 	public void setCurrency(String currency) {
 		this.currency = currency;
-		transaction.add(now() + "Currency type of the account was set to "
+		transaction.add(now() + " Currency type of the account was set to "
 				+ currency);
 	}
 
 	public void setBalance(double balance) {
 		this.balance = balance;
-		transaction.add(now() + "Balance was set to "
+		transaction.add(now() + " Balance was set to "
 				+ Double.toString(balance));
 	}
 
@@ -95,7 +95,7 @@ public class Account {
 	public String getTransactions() {
 		String message = "";
 		for (int index = 0; index < transaction.size(); index++) {
-			message = message + transaction.get(index) + "\n";
+			message = message + transaction.get(index) + "\r\n";
 		}
 		message = message + "All balances stated are in " + currency;
 		return message;

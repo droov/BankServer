@@ -379,6 +379,8 @@ public class Parser {
 	public static double round(double unrounded, int precision, int roundingMode) {
 		BigDecimal bd = new BigDecimal(unrounded);
 		BigDecimal rounded = bd.setScale(precision, roundingMode);
-		return rounded.doubleValue();
+		String roundedString = rounded.toString();
+		roundedString = roundedString.substring(0,roundedString.indexOf(".")+2);
+		return Double.parseDouble(roundedString);
 	}
 }

@@ -39,10 +39,16 @@ class UDPServer {
 			System.out.println("RECEIVED FROM IP ADDRESS "
 					+ IPAddress.toString() + " :  " + sentence);
 			port = receivePacket.getPort();
-			String serverResponse = parser.parseMessage(sentence);		
-			System.out.println("SENT TO IP ADDRESS " + IPAddress.toString()
+			String decryptedSentence = Parser.decrypt(sentence);
+			System.out.println("DECRYPTED MESSAGE FROM IP ADDRESS "
+					+ IPAddress.toString() + " :  " + decryptedSentence);
+			String serverResponse = parser.parseMessage(decryptedSentence);
+			System.out.println("SERVER MESSAGE TO IP ADDRESS " + IPAddress.toString()
 					+ " : " + serverResponse);
-			sendData = serverResponse.getBytes();
+			String encryptedResponse = Parser.encrypt(serverResponse);
+			System.out.println("SENT TO IP ADDRESS " + IPAddress.toString()
+					+ " : " + encryptedResponse);
+			sendData = encryptedResponse.getBytes();
 			DatagramPacket sendPacket = new DatagramPacket(sendData,
 					sendData.length, IPAddress, port);
 			serverSocket.send(sendPacket);
@@ -50,14 +56,18 @@ class UDPServer {
 			// Sending data to monitors if they exist
 			for (Map.Entry entry : parser.listOfClients.entrySet()) {
 				if (((Client) entry.getValue()).getIsMonitor()) {
-					monitorResponse = serverResponse + "\r\n";
+					monitorResponse = encryptedResponse + "\r\n";
 					sendMonitorData = monitorResponse.getBytes();
 					DatagramPacket monitorSendPacket = new DatagramPacket(
 							sendMonitorData, sendMonitorData.length,
-							((Client) entry.getValue()).getIPAddress(), 9877);
+							((Client) entry.getValue()).getIPAddress(), ((Client) entry.getValue()).getPort());					
+					System.out.println("SERVER MESSAGE TO MONITOR AT IP ADDRESS "
+							+ ((Client) entry.getValue()).getIPAddress().toString()
+							+ " : " + serverResponse);
+					System.out.println("PORT = " + ((Client) entry.getValue()).getPort());
 					System.out.println("SENT TO MONITOR AT IP ADDRESS "
 							+ ((Client) entry.getValue()).getIPAddress()
-									.toString() + " : " + serverResponse);
+									.toString() + " : " + encryptedResponse);
 					udp.serverSocket.send(monitorSendPacket);
 				}
 			}
@@ -68,18 +78,22 @@ class UDPServer {
 class MonitorTimer extends TimerTask {
 	public void run() {
 		String serverResponse = "Monitor time interval has ended. You shall receive no further messages...";
+		String encryptedResponse = Parser.encrypt(serverResponse);
 		byte[] sendData = new byte[1024];
-		sendData = serverResponse.getBytes();
+		sendData = encryptedResponse.getBytes();
 
 		for (Map.Entry entry : UDPServer.parser.listOfClients.entrySet()) {
 			if (((Client) entry.getValue()).getIsMonitor()) {
 				((Client) entry.getValue()).setIsMonitor(false);
 				DatagramPacket monitorSendPacket = new DatagramPacket(sendData,
 						sendData.length,
-						((Client) entry.getValue()).getIPAddress(), 9877);
-				System.out.println("SENT TO MONITOR AT IP ADDRESS "
+						((Client) entry.getValue()).getIPAddress(), ((Client) entry.getValue()).getPort());
+				System.out.println("SERVER MESSAGE TO MONITOR AT IP ADDRESS "
 						+ ((Client) entry.getValue()).getIPAddress().toString()
 						+ " : " + serverResponse);
+				System.out.println("SENT TO MONITOR AT IP ADDRESS "
+						+ ((Client) entry.getValue()).getIPAddress().toString()
+						+ " : " + encryptedResponse);
 				try {
 					UDPServer.serverSocket.send(monitorSendPacket);
 				} catch (IOException e) {

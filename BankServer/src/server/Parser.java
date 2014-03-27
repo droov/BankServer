@@ -60,15 +60,23 @@ public class Parser {
 			boolean flag = false;
 
 			if (messageReceived.equalsIgnoreCase("000000")) {
+				// Remove this check if multiple clients are to be allowed in localhost
+				/*for (Map.Entry entry : listOfClients.entrySet()) {
+					if (((Client) entry.getValue()).getIPAddress().equals(
+							UDPServer.ipAddress)) {
+						return "Client already connected to the server...";
+					}
+				}*/
 				return Integer.toString(createNewClient());
 			} else if (messageReceived.equalsIgnoreCase("999999")) {
 				for (Map.Entry entry : listOfClients.entrySet()) {
 					if (((Client) entry.getValue()).getIPAddress().equals(
 							UDPServer.ipAddress)) {
 						listOfClients.remove(entry.getKey());
-						break;
+						return "Client has been disconnected from the server...";
 					}
 				}
+				return "Client not connected to the server...";
 			} else {
 				for (Map.Entry entry : listOfClients.entrySet()) {
 					if (((Client) entry.getValue()).getIPAddress().equals(
@@ -84,7 +92,7 @@ public class Parser {
 
 				for (Map.Entry entry : listOfClients.entrySet()) {
 					if (((Client) entry.getValue()).getIPAddress().equals(
-							UDPServer.ipAddress)) {
+							UDPServer.ipAddress) && ((Client) entry.getValue()).getIsMonitor() == false){
 						((Client) entry.getValue()).setPort(UDPServer.port);
 						System.out.println("Port updated to "
 								+ ((Client) entry.getValue()).getPort());
@@ -107,7 +115,9 @@ public class Parser {
 					name = stz.nextToken();
 					password = stz.nextToken();
 					currency = stz.nextToken();
-					if(!(currency.equals("AUD") || currency.equals("USD") || currency.equals("GBP") || currency.equals("SGD") || currency.equals("EUR") || currency.equals("JPY")))
+					if (!(currency.equals("AUD") || currency.equals("USD")
+							|| currency.equals("GBP") || currency.equals("SGD")
+							|| currency.equals("EUR") || currency.equals("JPY")))
 						return reply = " | | | | |Incorrect currency type. Please try again...";
 					balance = Double.parseDouble(stz.nextToken());
 					accountNum = openAccount(name, password, currency, balance);
@@ -169,7 +179,7 @@ public class Parser {
 					reply = requestId + "|"
 							+ checkAccountBalance(name, password, accountNum);
 				} else {
-					if(operation.equalsIgnoreCase("OpenAcc"))
+					if (operation.equalsIgnoreCase("OpenAcc"))
 						reply = " | | | | |Server error occured while parsing the message. Please try again later...";
 					else
 						reply = "Server error occured while parsing the message. Please try again later...";
@@ -348,7 +358,8 @@ public class Parser {
 		}
 		if (!listOfAccounts.containsKey(accountNum))
 			return "Account with account number " + accountNum + " not found";
-		return "Account with account number " + receiverAccountNum + " not found";	
+		return "Account with account number " + receiverAccountNum
+				+ " not found";
 	}
 
 	public double changeCurrency(String sourceCurrency,
@@ -380,11 +391,76 @@ public class Parser {
 		return "Client has been set as a monitor";
 	}
 
-	public static double round(double unrounded, int precision, int roundingMode) {
+	public double round(double unrounded, int precision, int roundingMode) {
 		BigDecimal bd = new BigDecimal(unrounded);
 		BigDecimal rounded = bd.setScale(precision, roundingMode);
 		String roundedString = rounded.toString();
-		roundedString = roundedString.substring(0,roundedString.indexOf(".")+2);
+		roundedString = roundedString.substring(0,
+				roundedString.indexOf(".") + 2);
 		return Double.parseDouble(roundedString);
+	}
+
+	public static String encrypt(String input) {
+		int i, j, length = input.length();
+		char ch;
+		String result = "";
+		for (i = 0; i < length; i++) {
+			ch = input.charAt(i);
+			if (Character.isLetter(ch)) {
+				if (Character.isUpperCase(ch)) {
+					for (j = 0; j < 3; j++) {
+						ch--;
+						if (ch < 'A')
+							ch = 'Z';
+					}
+				} else if (Character.isLowerCase(ch)) {
+					for (j = 0; j < 3; j++) {
+						ch--;
+						if (ch < 'a')
+							ch = 'z';
+					}
+				}
+			} else if (Character.isDigit(ch)) {
+				for (j = 0; j < 3; j++) {
+					ch--;
+					if (ch < '0')
+						ch = '9';
+				}
+			}
+			result = ch + result;
+		}
+		return result;
+	}
+
+	public static String decrypt(String input) {
+		int i, j, length = input.length();
+		char ch;
+		String result = "";
+		for (i = 0; i < length; i++) {
+			ch = input.charAt(i);
+			if (Character.isLetter(ch)) {
+				if (Character.isUpperCase(ch)) {
+					for (j = 0; j < 3; j++) {
+						ch++;
+						if (ch > 'Z')
+							ch = 'A';
+					}
+				} else if (Character.isLowerCase(ch)) {
+					for (j = 0; j < 3; j++) {
+						ch++;
+						if (ch > 'z')
+							ch = 'a';
+					}
+				}
+			} else if (Character.isDigit(ch)) {
+				for (j = 0; j < 3; j++) {
+					ch++;
+					if (ch > '9')
+						ch = '0';
+				}
+			}
+			result = ch + result;
+		}
+		return result;
 	}
 }

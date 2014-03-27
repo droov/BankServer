@@ -4,6 +4,9 @@ import java.io.*;
 import java.util.*;
 import java.net.*;
 
+/*
+ * Class that communicates with the client using the UDP Transfer Protocol 
+ */
 class UDPServer {
 
 	protected static InetAddress ipAddress;

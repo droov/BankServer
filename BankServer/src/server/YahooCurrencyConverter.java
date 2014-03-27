@@ -21,11 +21,4 @@ public class YahooCurrencyConverter implements CurrencyConverter {
 		httpclient.getConnectionManager().shutdown();
 		return Float.parseFloat(responseBody);
 	}
-
-	/*
-	 * public static void main(String[] args) { YahooCurrencyConverter ycc = new
-	 * YahooCurrencyConverter(); try { float current = ycc.convert("SGD",
-	 * "USD"); System.out.println(current); } catch (Exception e) {
-	 * e.printStackTrace(); } }
-	 */
 }

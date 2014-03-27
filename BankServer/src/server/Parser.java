@@ -107,6 +107,8 @@ public class Parser {
 					name = stz.nextToken();
 					password = stz.nextToken();
 					currency = stz.nextToken();
+					if(!(currency.equals("AUD") || currency.equals("USD") || currency.equals("GBP") || currency.equals("SGD") || currency.equals("EUR") || currency.equals("JPY")))
+						return reply = " | | | | |Incorrect currency type. Please try again...";
 					balance = Double.parseDouble(stz.nextToken());
 					accountNum = openAccount(name, password, currency, balance);
 					reply = requestId + "|" + accountNum + "|" + name + "|"
@@ -140,9 +142,10 @@ public class Parser {
 									currency, amount);
 				} else if (operation.equalsIgnoreCase("Monitor")) {
 					String masterPassword = stz.nextToken();
+					int port = Integer.parseInt(stz.nextToken());
 					time = Integer.parseInt(stz.nextToken());
 					reply = requestId + "|"
-							+ setClientToMonitor(time, masterPassword);
+							+ setClientToMonitor(time, masterPassword, port);
 				} else if (operation.equalsIgnoreCase("TransactionAcc")) {
 					name = stz.nextToken();
 					password = stz.nextToken();
@@ -363,13 +366,14 @@ public class Parser {
 		return amount;
 	}
 
-	public String setClientToMonitor(int time, String masterPassword) {
+	public String setClientToMonitor(int time, String masterPassword, int port) {
 		if (!masterPassword.equals("key"))
 			return "Master Password is incorrect. Monitor privileges not granted.";
 		for (Map.Entry entry : listOfClients.entrySet()) {
 			if (((Client) entry.getValue()).getIPAddress().equals(
 					UDPServer.ipAddress)) {
 				((Client) entry.getValue()).setIsMonitor(true);
+				((Client) entry.getValue()).setPort(port);
 				UDPServer.timer.schedule(new MonitorTimer(), time * 1000);
 			}
 		}

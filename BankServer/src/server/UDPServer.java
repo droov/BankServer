@@ -24,8 +24,8 @@ class UDPServer {
 		UDPServer udp = new UDPServer();
 		// DatagramSocket serverSocket = new DatagramSocket(9876);
 		byte[] receiveData = new byte[1024];
-		byte[] sendData = new byte[1024];
-		byte[] sendMonitorData = new byte[1024];
+		byte[] sendData = new byte[10240];
+		byte[] sendMonitorData = new byte[10240];
 		String monitorResponse;
 		while (true) {
 			DatagramPacket receivePacket = new DatagramPacket(receiveData,

@@ -19,7 +19,7 @@ public class Parser {
 	public Parser() {
 		messageReceived = "";
 		lastAccNum = (int) (Math.random() * 1000000);
-		lastAccNum = 100;
+		//lastAccNum = 100;
 		lastClientId = 11;
 		listOfAccounts = new LinkedHashMap<Integer, Account>();
 		listOfClients = new LinkedHashMap<Integer, Client>();

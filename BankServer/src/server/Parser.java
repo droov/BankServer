@@ -5,7 +5,12 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.StringTokenizer;
 
+/*
+ * Class that interprets the client message and generates a response 
+ */
 public class Parser {
+
+	// Instance variables
 	private String messageReceived;
 	private int lastAccNum;
 	private int lastClientId;
@@ -13,21 +18,26 @@ public class Parser {
 	protected LinkedHashMap<Integer, Client> listOfClients;
 	private LinkedHashMap<Integer, String> receivedMessages;
 	private LinkedHashMap<Integer, String> sentMessages;
-	private YahooCurrencyConverter currConverter;
-	private boolean isAtMostOnce = true;
+	private CurrencyConverter currConverter;
+	private boolean isAtMostOnce = true; // For implementing the At-Most-Once
+											// strategy. Can be set to false to
+											// implement the At-Least-Once
+											// strategy
 
+	// Default constructor
 	public Parser() {
 		messageReceived = "";
-		lastAccNum = (int) (Math.random() * 1000000);
-		//lastAccNum = 100;
+		lastAccNum = (int) (Math.random() * 1000000); // Generates a random 6
+														// digit account number
 		lastClientId = 11;
 		listOfAccounts = new LinkedHashMap<Integer, Account>();
 		listOfClients = new LinkedHashMap<Integer, Client>();
 		receivedMessages = new LinkedHashMap<Integer, String>();
 		sentMessages = new LinkedHashMap<Integer, String>();
-		currConverter = new YahooCurrencyConverter();
+		currConverter = new CurrencyConverter();
 	}
 
+	// Get and Set methods for Instance Variables
 	public String getMessageReceived() {
 		return messageReceived;
 	}
@@ -52,6 +62,7 @@ public class Parser {
 		lastClientId = cid;
 	}
 
+	// Method to parse the message and generate a response
 	public String parseMessage(String message) {
 		try {
 			setMessageReceived(message);
@@ -60,15 +71,16 @@ public class Parser {
 			boolean flag = false;
 
 			if (messageReceived.equalsIgnoreCase("000000")) {
-				// Remove this check if multiple clients are to be allowed in localhost
-				/*for (Map.Entry entry : listOfClients.entrySet()) {
+				// Client connects to server for the first time
+				for (Map.Entry entry : listOfClients.entrySet()) {
 					if (((Client) entry.getValue()).getIPAddress().equals(
 							UDPServer.ipAddress)) {
 						return "Client already connected to the server...";
 					}
-				}*/
+				}
 				return Integer.toString(createNewClient());
 			} else if (messageReceived.equalsIgnoreCase("999999")) {
+				// Client disconnects from server
 				for (Map.Entry entry : listOfClients.entrySet()) {
 					if (((Client) entry.getValue()).getIPAddress().equals(
 							UDPServer.ipAddress)) {
@@ -78,6 +90,8 @@ public class Parser {
 				}
 				return "Client not connected to the server...";
 			} else {
+				// Check to ensure clients IP Address has been registered
+				// with the server and the request is from the correct client
 				for (Map.Entry entry : listOfClients.entrySet()) {
 					if (((Client) entry.getValue()).getIPAddress().equals(
 							UDPServer.ipAddress)
@@ -90,18 +104,22 @@ public class Parser {
 				if (flag == false)
 					return "This client is not authorized to transact with the server";
 
+				// Updating port of client (not monitor)
 				for (Map.Entry entry : listOfClients.entrySet()) {
 					if (((Client) entry.getValue()).getIPAddress().equals(
-							UDPServer.ipAddress) && ((Client) entry.getValue()).getIsMonitor() == false){
+							UDPServer.ipAddress)
+							&& ((Client) entry.getValue()).getIsMonitor() == false) {
 						((Client) entry.getValue()).setPort(UDPServer.port);
 						System.out.println("Port updated to "
 								+ ((Client) entry.getValue()).getPort());
 						break;
 					}
 				}
-
+				// Used to un-marshall the message
 				StringTokenizer stz = new StringTokenizer(message, "|");
 				requestId = Integer.parseInt(stz.nextToken());
+				// For At-Most-Once Implementation, duplicate messages are
+				// filtered and not processed again
 				if (receivedMessages.containsKey(requestId)
 						&& isAtMostOnce == true) {
 					return sentMessages.get(requestId);
@@ -111,10 +129,13 @@ public class Parser {
 				String name, password, currency;
 				int accountNum, time;
 				double balance, amount;
+
 				if (operation.equalsIgnoreCase("OpenAcc")) {
+					// Open Account
 					name = stz.nextToken();
 					password = stz.nextToken();
 					currency = stz.nextToken();
+					// To ensure currency is of enumerated type
 					if (!(currency.equals("AUD") || currency.equals("USD")
 							|| currency.equals("GBP") || currency.equals("SGD")
 							|| currency.equals("EUR") || currency.equals("JPY")))
@@ -125,12 +146,14 @@ public class Parser {
 							+ currency + "|" + balance + "|" + "Account for "
 							+ name + " created with Account Num " + accountNum;
 				} else if (operation.equalsIgnoreCase("CloseAcc")) {
+					// Close Account
 					name = stz.nextToken();
 					password = stz.nextToken();
 					accountNum = Integer.parseInt(stz.nextToken());
 					reply = requestId + "|"
 							+ closeAccount(accountNum, password);
 				} else if (operation.equalsIgnoreCase("DepositAcc")) {
+					// Deposit Money into Account
 					name = stz.nextToken();
 					password = stz.nextToken();
 					accountNum = Integer.parseInt(stz.nextToken());
@@ -141,6 +164,7 @@ public class Parser {
 							+ depositToAccount(name, accountNum, password,
 									currency, amount);
 				} else if (operation.equalsIgnoreCase("WithdrawAcc")) {
+					// Withdraw Money from Account
 					name = stz.nextToken();
 					password = stz.nextToken();
 					accountNum = Integer.parseInt(stz.nextToken());
@@ -151,18 +175,21 @@ public class Parser {
 							+ withdrawFromAccount(name, accountNum, password,
 									currency, amount);
 				} else if (operation.equalsIgnoreCase("Monitor")) {
+					// Enable Monitor
 					String masterPassword = stz.nextToken();
 					int port = Integer.parseInt(stz.nextToken());
 					time = Integer.parseInt(stz.nextToken());
 					reply = requestId + "|"
 							+ setClientToMonitor(time, masterPassword, port);
 				} else if (operation.equalsIgnoreCase("TransactionAcc")) {
+					// Obtain list of transactions carried out on account
 					name = stz.nextToken();
 					password = stz.nextToken();
 					accountNum = Integer.parseInt(stz.nextToken());
 					reply = requestId + "|" + "\n"
 							+ getTransactionHistory(name, accountNum, password);
 				} else if (operation.equalsIgnoreCase("TransferAcc")) {
+					// Transfer money to another bank account
 					name = stz.nextToken();
 					password = stz.nextToken();
 					accountNum = Integer.parseInt(stz.nextToken());
@@ -173,12 +200,14 @@ public class Parser {
 							+ transferToAccount(name, accountNum, password,
 									receiverAccountNum, amount);
 				} else if (operation.equalsIgnoreCase("CheckAcc")) {
+					// Check account balance
 					name = stz.nextToken();
 					password = stz.nextToken();
 					accountNum = Integer.parseInt(stz.nextToken());
 					reply = requestId + "|"
 							+ checkAccountBalance(name, password, accountNum);
 				} else {
+					// Handling erroneous messages
 					if (operation.equalsIgnoreCase("OpenAcc"))
 						reply = " | | | | |Server error occured while parsing the message. Please try again later...";
 					else
@@ -186,42 +215,44 @@ public class Parser {
 				}
 
 			}
-			for (Map.Entry entry : listOfAccounts.entrySet()) {
-				System.out.println(entry.getValue().toString());
-			}
-
-			for (Map.Entry entry : listOfClients.entrySet()) {
-				System.out.println(entry.getValue().toString());
-			}
 			sentMessages.put(requestId, reply);
 			return reply;
 		} catch (Exception e) {
+			// Catch any exceptions that may occur
 			return "Server error occured while parsing the message. Please try again later...";
 		}
 	}
 
+	// Method to create an account with a auto generated account number
 	public int openAccount(String name, String password, String currency,
 			double balance) {
-		int accountNum = getLastAccountNum();
-		setLastAccountNum(getLastAccountNum() + 1);
+		int accountNum = getLastAccountNum(); // generated in default
+												// constructor
+		setLastAccountNum(getLastAccountNum() + 1); // incremented to ensure
+													// uniqueness
 		Account newAccount = new Account(accountNum, name, password, currency,
 				balance);
 		listOfAccounts.put(accountNum, newAccount);
 		return accountNum;
 	}
 
+	// Method to create a client with a auto generated client id
 	public int createNewClient() {
 		int clientId = getLastClientId();
 		setLastClientId(getLastClientId() + 1);
 		Client newClient = new Client(clientId, false, UDPServer.ipAddress,
-				UDPServer.port);
-		listOfClients.put(clientId, newClient);
+				UDPServer.port); // new client object created
+		listOfClients.put(clientId, newClient); // client object added to list
+												// of active clients
 		return clientId;
 	}
 
+	// Method to close an existing account
 	public String closeAccount(int accountNum, String password) {
 		if (listOfAccounts.containsKey(accountNum)) {
+			// Ensures account exists
 			if (listOfAccounts.get(accountNum).getPassword().equals(password)) {
+				// Ensures credentials are correct and removes account
 				listOfAccounts.remove(accountNum);
 				return "Account with account number " + accountNum
 						+ " has been closed";
@@ -231,6 +262,7 @@ public class Parser {
 		return "Account with account number " + accountNum + " not found";
 	}
 
+	// Method to withdraw money from an account
 	public String withdrawFromAccount(String name, int accountNum,
 			String password, String currency, double amount) {
 		double convertedAmount = amount;
@@ -239,11 +271,14 @@ public class Parser {
 					&& listOfAccounts.get(accountNum).getName().equals(name)) {
 				if (!listOfAccounts.get(accountNum).getCurrency()
 						.equalsIgnoreCase(currency))
+					// Converts currency of withdrawal to currency of account
+					// based on live forex rates
 					convertedAmount = changeCurrency(currency, listOfAccounts
 							.get(accountNum).getCurrency(), amount);
 				if (convertedAmount == -1)
 					return "Server error occured while processing the transaction. Please try again later...";
 				if (listOfAccounts.get(accountNum).getBalance() >= convertedAmount) {
+					// Ensures client has sufficient funds
 					listOfAccounts.get(accountNum).setBalance(
 							listOfAccounts.get(accountNum).getBalance()
 									- convertedAmount);
@@ -261,6 +296,7 @@ public class Parser {
 		return "Account with account number " + accountNum + " not found";
 	}
 
+	// Method to deposit money to an account
 	public String depositToAccount(String name, int accountNum,
 			String password, String currency, double amount) {
 		double convertedAmount = amount;
@@ -287,6 +323,7 @@ public class Parser {
 		return "Account with account number " + accountNum + " not found";
 	}
 
+	// Method to check account balance
 	public String checkAccountBalance(String name, String password,
 			int accountNum) {
 		if (listOfAccounts.containsKey(accountNum)) {
@@ -301,6 +338,7 @@ public class Parser {
 		return "Account with account number " + accountNum + " not found";
 	}
 
+	// Method to obtain transaction history associated with an account
 	public String getTransactionHistory(String name, int accountNum,
 			String password) {
 		if (listOfAccounts.containsKey(accountNum)) {
@@ -313,6 +351,7 @@ public class Parser {
 		return "Account with account number " + accountNum + " not found";
 	}
 
+	// Method to transfer funds between accounts
 	public String transferToAccount(String name, int accountNum,
 			String password, int receiverAccountNum, double amount) {
 		double convertedAmount = amount;
@@ -326,6 +365,8 @@ public class Parser {
 						.equalsIgnoreCase(
 								listOfAccounts.get(receiverAccountNum)
 										.getCurrency()))
+					// Convert transfer amount if receiver currency is different
+					// from sender currency
 					convertedAmount = changeCurrency(
 							listOfAccounts.get(accountNum).getCurrency(),
 							listOfAccounts.get(receiverAccountNum)
@@ -362,11 +403,13 @@ public class Parser {
 				+ " not found";
 	}
 
+	// Helper method to convert an amount to another currency based on live
+	// forex rates
 	public double changeCurrency(String sourceCurrency,
 			String destinationCurrency, double amount) {
 		float exchangeRate = 1;
 		try {
-			exchangeRate = currConverter.convert(sourceCurrency,
+			exchangeRate = currConverter.convertCurrency(sourceCurrency,
 					destinationCurrency);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -377,20 +420,24 @@ public class Parser {
 		return amount;
 	}
 
+	// Method to set client as a monitor
 	public String setClientToMonitor(int time, String masterPassword, int port) {
-		if (!masterPassword.equals("key"))
+		if (!masterPassword.equals("key")) // Matches to master password entered
+											// by client
 			return "Master Password is incorrect. Monitor privileges not granted.";
 		for (Map.Entry entry : listOfClients.entrySet()) {
 			if (((Client) entry.getValue()).getIPAddress().equals(
 					UDPServer.ipAddress)) {
 				((Client) entry.getValue()).setIsMonitor(true);
 				((Client) entry.getValue()).setPort(port);
+				// Timer set in seconds
 				UDPServer.timer.schedule(new MonitorTimer(), time * 1000);
 			}
 		}
 		return "Client has been set as a monitor";
 	}
 
+	// Helper method to round a double value to 2 decimal places
 	public double round(double unrounded, int precision, int roundingMode) {
 		BigDecimal bd = new BigDecimal(unrounded);
 		BigDecimal rounded = bd.setScale(precision, roundingMode);
@@ -400,6 +447,9 @@ public class Parser {
 		return Double.parseDouble(roundedString);
 	}
 
+	// Helper method to implement Caesar's Encryption Algorithm
+	// All characters are cyclically shifted left by 3 positions and string is
+	// reversed
 	public static String encrypt(String input) {
 		int i, j, length = input.length();
 		char ch;
@@ -432,6 +482,9 @@ public class Parser {
 		return result;
 	}
 
+	// Helper method to implement Caesar's Decryption Algorithm
+	// All characters are cyclically shifted right by 3 positions and string is
+	// reversed
 	public static String decrypt(String input) {
 		int i, j, length = input.length();
 		char ch;

@@ -2,16 +2,17 @@ package server;
 
 import java.net.InetAddress;
 
+/*
+ * Class that maintains details of a Client 
+ */
 public class Client {
+	// Instance Variables
 	private int clientID;
 	private boolean isMonitor;
 	private int port;
 	private InetAddress ipAddress;
 
-	Client() {
-		// default constructor
-	}
-
+	// Parametrized Constructor
 	Client(int clientID, boolean isMonitor, InetAddress ipAddress, int port) {
 		this.clientID = clientID;
 		this.isMonitor = isMonitor;
@@ -19,6 +20,7 @@ public class Client {
 		this.port = port;
 	}
 
+	// Get and set methods for instance variables
 	public int getClientID() {
 		return clientID;
 	}
@@ -50,5 +52,4 @@ public class Client {
 	public void setIPAddress(InetAddress ipAddress) {
 		this.ipAddress = ipAddress;
 	}
-
 }

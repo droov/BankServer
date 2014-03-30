@@ -4,7 +4,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 
+/*
+ * Class that maintains details of an Account 
+ */
 public class Account {
+	// Instance Variables
 	private int accountNumber;
 	private String name;
 	private String password;
@@ -13,11 +17,13 @@ public class Account {
 	private ArrayList<String> transaction;
 	public static final String DATE_FORMAT_NOW = "yyyy-MM-dd HH:mm:ss";
 
+	// Default constructor
 	Account() {
 		transaction = new ArrayList<String>();
-		transaction.add(now() + "Account was opened");
+		transaction.add(now() + " Account was opened");
 	}
 
+	// Parametrized constructor
 	Account(int accountNumber, String name, String password, String currency,
 			Double balance) {
 		String time = now();
@@ -38,6 +44,7 @@ public class Account {
 				+ Double.toString(balance));
 	}
 
+	// Get and set methods for the instance variables
 	public int getAccountNumber() {
 		return accountNumber;
 	}
@@ -86,12 +93,6 @@ public class Account {
 				+ Double.toString(balance));
 	}
 
-	public static String now() {
-		Calendar cal = Calendar.getInstance();
-		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT_NOW);
-		return sdf.format(cal.getTime());
-	}
-
 	public String getTransactions() {
 		String message = "";
 		for (int index = 0; index < transaction.size(); index++) {
@@ -101,4 +102,10 @@ public class Account {
 		return message;
 	}
 
+	// Helper method to calculate current time
+	public static String now() {
+		Calendar cal = Calendar.getInstance();
+		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT_NOW);
+		return sdf.format(cal.getTime());
+	}
 }

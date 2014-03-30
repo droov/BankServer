@@ -80,16 +80,7 @@ class UDPServer {
 			// Sending data to monitors if they exist
 			for (Map.Entry entry : parser.listOfClients.entrySet()) {
 				if (((Client) entry.getValue()).getIsMonitor()) {
-					monitorResponse = encryptedResponse + "\r\n"; // Additional
-																	// \r\n
-																	// added so
-																	// the C++
-																	// client
-																	// can
-																	// interpret
-																	// results
-																	// in a new
-																	// line
+					monitorResponse = encryptedResponse; 
 					sendMonitorData = monitorResponse.getBytes();
 					DatagramPacket monitorSendPacket = new DatagramPacket(
 							sendMonitorData, sendMonitorData.length,

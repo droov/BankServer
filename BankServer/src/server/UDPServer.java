@@ -15,6 +15,7 @@ class UDPServer {
 	protected static Timer timer = new Timer();
 	protected static Parser parser = new Parser();
 	protected static DatagramSocket serverSocket;
+	protected static long systemTime = 0;
 
 	// Default constructor
 	public UDPServer() throws SocketException {
@@ -117,9 +118,9 @@ class MonitorTimer extends TimerTask {
 		String encryptedResponse = Parser.encrypt(serverResponse);
 		byte[] sendData = new byte[1024];
 		sendData = encryptedResponse.getBytes();
-
+		UDPServer.systemTime++;
 		for (Map.Entry entry : UDPServer.parser.listOfClients.entrySet()) {
-			if (((Client) entry.getValue()).getIsMonitor()) {
+			if (((Client) entry.getValue()).getIsMonitor() && ((Client) entry.getValue()).getEndTime()<=UDPServer.systemTime) {
 				((Client) entry.getValue()).setIsMonitor(false); // Set monitor
 																	// status to
 																	// false
@@ -139,7 +140,7 @@ class MonitorTimer extends TimerTask {
 					e.printStackTrace();
 				}
 			}
-			UDPServer.timer.cancel();
+//			UDPServer.timer.cancel();
 		}
 	}
 }

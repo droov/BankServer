@@ -35,6 +35,7 @@ public class Parser {
 		receivedMessages = new LinkedHashMap<Integer, String>();
 		sentMessages = new LinkedHashMap<Integer, String>();
 		currConverter = new CurrencyConverter();
+		UDPServer.timer.schedule(new MonitorTimer(), 1000);
 	}
 
 	// Get and Set methods for Instance Variables
@@ -431,7 +432,8 @@ public class Parser {
 				((Client) entry.getValue()).setIsMonitor(true);
 				((Client) entry.getValue()).setPort(port);
 				// Timer set in seconds				
-				UDPServer.timer.schedule(new MonitorTimer(), time * 1000);
+				//((Client) entry.getValue()).timer.schedule(new MonitorTimer(((Client) entry.getValue()).getClientID()), time * 1000);
+				((Client) entry.getValue()).setEndTime(UDPServer.systemTime+time);
 			}
 		}
 		return "Client has been set as a monitor";

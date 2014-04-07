@@ -1,6 +1,7 @@
 package server;
 
 import java.net.InetAddress;
+import java.util.Date;
 
 /*
  * Class that maintains details of a Client 
@@ -11,6 +12,7 @@ public class Client {
 	private boolean isMonitor;
 	private int port;
 	private InetAddress ipAddress;
+	private long endTime;
 
 	// Parametrized Constructor
 	Client(int clientID, boolean isMonitor, InetAddress ipAddress, int port) {
@@ -25,6 +27,10 @@ public class Client {
 		return clientID;
 	}
 
+	public long getEndTime() {
+		return endTime;
+	}
+	
 	public boolean getIsMonitor() {
 		return isMonitor;
 	}
@@ -45,6 +51,10 @@ public class Client {
 		this.clientID = clientID;
 	}
 
+	public void setEndTime(long time) {
+		this.endTime = time;
+	}
+	
 	public void setIsMonitor(boolean isMonitor) {
 		this.isMonitor = isMonitor;
 	}

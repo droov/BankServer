@@ -12,7 +12,7 @@ public class Client {
 	private boolean isMonitor;
 	private int port;
 	private InetAddress ipAddress;
-	protected Timer timer = new Timer();
+	protected Timer timer;
 
 	// Parametrized Constructor
 	Client(int clientID, boolean isMonitor, InetAddress ipAddress, int port) {
@@ -20,6 +20,7 @@ public class Client {
 		this.isMonitor = isMonitor;
 		this.ipAddress = ipAddress;
 		this.port = port;
+		timer = new Timer();
 	}
 
 	// Get and set methods for instance variables

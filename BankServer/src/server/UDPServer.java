@@ -11,8 +11,7 @@ class UDPServer {
 
 	// Instance Variables
 	protected static InetAddress ipAddress;
-	protected static int port;
-	protected static Timer timer = new Timer();
+	protected static int port;	
 	protected static Parser parser = new Parser();
 	protected static DatagramSocket serverSocket;
 
@@ -153,7 +152,7 @@ class MonitorTimer extends TimerTask {
 					e.printStackTrace();
 				}
 			}
-			UDPServer.timer.cancel();
+			((Client) entry.getValue()).timer.cancel();
 		}
 	}
 }

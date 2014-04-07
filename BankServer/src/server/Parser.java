@@ -431,7 +431,7 @@ public class Parser {
 				((Client) entry.getValue()).setIsMonitor(true);
 				((Client) entry.getValue()).setPort(port);
 				// Timer set in seconds
-				UDPServer.timer.schedule(new MonitorTimer(), time * 1000);
+				UDPServer.timer.schedule(new MonitorTimer(((Client) entry.getValue()).getClientID()), time * 1000);
 			}
 		}
 		return "Client has been set as a monitor";

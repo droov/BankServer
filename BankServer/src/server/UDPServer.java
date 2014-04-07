@@ -110,6 +110,20 @@ class UDPServer {
  */
 class MonitorTimer extends TimerTask {
 
+	private int clientId;
+	
+	public MonitorTimer(int clientId){
+		super();
+		this.clientId = clientId;
+	}
+	
+	public void setClientId(int id){
+		clientId = id;
+	}
+	
+	public int getClientId(){
+		return clientId;
+	}
 	// Method invoked on completion of the timer to set the monitor to false and
 	// send it a final closing message
 	public void run() {
@@ -119,7 +133,7 @@ class MonitorTimer extends TimerTask {
 		sendData = encryptedResponse.getBytes();
 
 		for (Map.Entry entry : UDPServer.parser.listOfClients.entrySet()) {
-			if (((Client) entry.getValue()).getIsMonitor()) {
+			if (((Client) entry.getValue()).getIsMonitor() && ((Client) entry.getValue()).getClientID() == this.getClientId()) {
 				((Client) entry.getValue()).setIsMonitor(false); // Set monitor
 																	// status to
 																	// false

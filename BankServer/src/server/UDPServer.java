@@ -12,6 +12,7 @@ class UDPServer {
 	// Instance Variables
 	protected static InetAddress ipAddress;
 	protected static int port;	
+	protected static Timer timer = new Timer();
 	protected static Parser parser = new Parser();
 	protected static DatagramSocket serverSocket;
 
@@ -109,20 +110,6 @@ class UDPServer {
  */
 class MonitorTimer extends TimerTask {
 
-	private int clientId;
-	
-	public MonitorTimer(int clientId){
-		super();
-		this.clientId = clientId;
-	}
-	
-	public void setClientId(int id){
-		clientId = id;
-	}
-	
-	public int getClientId(){
-		return clientId;
-	}
 	// Method invoked on completion of the timer to set the monitor to false and
 	// send it a final closing message
 	public void run() {
@@ -132,7 +119,7 @@ class MonitorTimer extends TimerTask {
 		sendData = encryptedResponse.getBytes();
 
 		for (Map.Entry entry : UDPServer.parser.listOfClients.entrySet()) {
-			if (((Client) entry.getValue()).getIsMonitor() && ((Client) entry.getValue()).getClientID() == this.getClientId()) {
+			if (((Client) entry.getValue()).getIsMonitor()) {
 				((Client) entry.getValue()).setIsMonitor(false); // Set monitor
 																	// status to
 																	// false
@@ -152,7 +139,7 @@ class MonitorTimer extends TimerTask {
 					e.printStackTrace();
 				}
 			}
-			((Client) entry.getValue()).timer.cancel();
+			UDPServer.timer.cancel();
 		}
 	}
 }

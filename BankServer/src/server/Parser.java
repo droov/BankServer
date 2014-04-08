@@ -12,7 +12,6 @@ public class Parser {
 
 	// Instance variables
 	private String messageReceived;
-	int temp;
 	private int lastAccNum;
 	private int lastClientId;
 	private LinkedHashMap<Integer, Account> listOfAccounts;

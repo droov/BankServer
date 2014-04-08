@@ -35,7 +35,7 @@ public class Parser {
 		receivedMessages = new LinkedHashMap<Integer, String>();
 		sentMessages = new LinkedHashMap<Integer, String>();
 		currConverter = new CurrencyConverter();
-		UDPServer.timer.schedule(new MonitorTimer(), 1000);
+		UDPServer.timer.schedule(new MonitorTimer(), 0, 1000);
 	}
 
 	// Get and Set methods for Instance Variables

@@ -146,6 +146,7 @@ class MonitorTimer extends TimerTask {
 		byte[] sendData = new byte[1024];
 		sendData = encryptedResponse.getBytes();
 		UDPServer.systemTime++;
+		//System.out.println("Time increased");
 		for (Map.Entry entry : UDPServer.parser.listOfClients.entrySet()) {
 			if (((Client) entry.getValue()).getIsMonitor() && ((Client) entry.getValue()).getEndTime()<=UDPServer.systemTime) {
 				((Client) entry.getValue()).setIsMonitor(false); // Set monitor

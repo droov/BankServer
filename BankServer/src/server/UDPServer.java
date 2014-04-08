@@ -16,6 +16,7 @@ class UDPServer {
 	protected static Parser parser = new Parser();
 	protected static DatagramSocket serverSocket;
 	protected static long systemTime = 0;
+	protected static boolean useProbability = false;
 
 	// Default constructor
 	public UDPServer() throws SocketException {
@@ -63,9 +64,11 @@ class UDPServer {
 																			// to
 																			// messsage
 																			// received
+			String encryptedResponse = "";
+			if(!useProbability){
 			System.out.println("SERVER MESSAGE TO IP ADDRESS "
 					+ IPAddress.toString() + " : " + serverResponse);
-			String encryptedResponse = Parser.encrypt(serverResponse); // Encrypting
+			encryptedResponse = Parser.encrypt(serverResponse); // Encrypting
 																		// message
 																		// to be
 																		// sent
@@ -77,7 +80,31 @@ class UDPServer {
 			serverSocket.send(sendPacket); // Sending the message in a packet to
 											// the IP Address and port from
 											// which the message was received
-
+			}
+			else{
+				double prob = Math.random();
+				if(prob <= 0.5){
+					System.out.println("SERVER MESSAGE TO IP ADDRESS "
+							+ IPAddress.toString() + " : " + serverResponse);
+					encryptedResponse = Parser.encrypt(serverResponse); // Encrypting
+																				// message
+																				// to be
+																				// sent
+					System.out.println("SENT TO IP ADDRESS " + IPAddress.toString()
+							+ " : " + encryptedResponse);
+					sendData = encryptedResponse.getBytes();
+					DatagramPacket sendPacket = new DatagramPacket(sendData,
+							sendData.length, IPAddress, port);
+					serverSocket.send(sendPacket); // Sending the message in a packet to
+													// the IP Address and port from
+													// which the message was received
+				}
+				else{
+					System.out.println("The following message was not sent to the client to simulate packetloss :" + serverResponse);
+					System.out.println("Probability: " + Double.toString(prob*100).substring(0,Double.toString(prob).indexOf(".")+2) + " %");
+				}
+				
+			}
 			// Sending data to monitors if they exist
 			for (Map.Entry entry : parser.listOfClients.entrySet()) {
 				if (((Client) entry.getValue()).getIsMonitor()) {

@@ -286,7 +286,7 @@ public class Parser {
 					return "The withdrawal of amount " + amount + currency
 							+ " from account " + accountNum
 							+ " has been successful. Your new balance is "
-							+ listOfAccounts.get(accountNum).getBalance()
+							+ roundBalance(listOfAccounts.get(accountNum).getBalance())
 							+ listOfAccounts.get(accountNum).getCurrency();
 				} else {
 					return "Insufficient funds available to complete transaction";
@@ -316,7 +316,7 @@ public class Parser {
 				return "The deposit of amount " + amount + currency
 						+ " to account " + accountNum
 						+ " has been successful. Your new balance is "
-						+ listOfAccounts.get(accountNum).getBalance()
+						+ roundBalance(listOfAccounts.get(accountNum).getBalance())
 						+ listOfAccounts.get(accountNum).getCurrency();
 			} else
 				return "The details entered are incorrect.";
@@ -331,7 +331,7 @@ public class Parser {
 			if (listOfAccounts.get(accountNum).getPassword().equals(password)
 					&& listOfAccounts.get(accountNum).getName().equals(name)) {
 				return "The account balance of account number " + accountNum
-						+ " is " + listOfAccounts.get(accountNum).getBalance()
+						+ " is " + roundBalance(listOfAccounts.get(accountNum).getBalance())
 						+ listOfAccounts.get(accountNum).getCurrency();
 			} else
 				return "The details entered are incorrect.";
@@ -390,7 +390,7 @@ public class Parser {
 							+ listOfAccounts.get(receiverAccountNum)
 									.getAccountNumber()
 							+ " has been successful. Your new balance is "
-							+ listOfAccounts.get(accountNum).getBalance()
+							+ roundBalance(listOfAccounts.get(accountNum).getBalance())
 							+ listOfAccounts.get(accountNum).getCurrency();
 				} else {
 					return "Insufficient funds available to complete transaction";
@@ -437,6 +437,13 @@ public class Parser {
 			}
 		}
 		return "Client has been set as a monitor";
+	}
+	
+	public static String roundBalance(double balance) {
+		String shortBalance = "";
+		shortBalance = String.valueOf(balance);
+		shortBalance = shortBalance.substring(0,shortBalance.indexOf(".") + 3);
+		return shortBalance;
 	}
 
 	// Helper method to round a double value to 2 decimal places

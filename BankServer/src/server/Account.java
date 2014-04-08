@@ -41,7 +41,7 @@ public class Account {
 				+ currency);
 		this.balance = balance;
 		transaction.add(time + " Balance was set to "
-				+ Double.toString(balance));
+				+ Parser.roundBalance(balance));
 	}
 
 	// Get and set methods for the instance variables

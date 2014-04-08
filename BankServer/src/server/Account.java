@@ -15,6 +15,7 @@ public class Account {
 	private String currency;
 	private double balance;
 	private ArrayList<String> transaction;
+	int temp;
 	public static final String DATE_FORMAT_NOW = "yyyy-MM-dd HH:mm:ss";
 
 	// Default constructor

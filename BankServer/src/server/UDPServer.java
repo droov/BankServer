@@ -10,7 +10,7 @@ import java.net.*;
 class UDPServer {
 
 	// Instance Variables
-	protected static InetAddress ipAddress;
+	protected static InetAddress ipAddress; 
 	protected static int port;	
 	protected static Timer timer = new Timer();
 	protected static Parser parser = new Parser();

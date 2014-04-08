@@ -101,7 +101,7 @@ class UDPServer {
 				}
 				else{
 					System.out.println("The following message was not sent to the client to simulate packetloss :" + serverResponse);
-					System.out.println("Probability: " + Double.toString(prob*100).substring(0,Double.toString(prob).indexOf(".")+2) + " %");
+					System.out.println("Probability: " + Double.toString(prob*100).substring(0,Double.toString(prob*100).indexOf(".")+3) + " %");
 				}
 				
 			}

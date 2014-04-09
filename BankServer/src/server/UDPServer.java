@@ -65,7 +65,7 @@ class UDPServer {
 																			// messsage
 																			// received
 			String encryptedResponse = "";
-			if(!useProbability){
+			if(!useProbability || decryptedSentence.equals("000000")){
 			System.out.println("SERVER MESSAGE TO IP ADDRESS "
 					+ IPAddress.toString() + " : " + serverResponse);
 			encryptedResponse = Parser.encrypt(serverResponse); // Encrypting

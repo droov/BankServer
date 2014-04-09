@@ -220,6 +220,7 @@ public class Parser {
 			return reply;
 		} catch (Exception e) {
 			// Catch any exceptions that may occur
+			e.printStackTrace();
 			return "Server error occured while parsing the message. Please try again later...";
 		}
 	}
@@ -442,6 +443,7 @@ public class Parser {
 	public static String roundBalance(double balance) {
 		String shortBalance = "";
 		shortBalance = String.valueOf(balance);
+		shortBalance = shortBalance + "000";
 		shortBalance = shortBalance.substring(0,shortBalance.indexOf(".") + 3);
 		return shortBalance;
 	}
